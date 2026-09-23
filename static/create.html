@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>New Ticket · Support CRM</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}</style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<header class="bg-white border-b border-slate-200">
+  <div class="max-w-2xl mx-auto px-4 py-4 flex items-center gap-2">
+    <a href="/" class="text-slate-400 hover:text-slate-700 text-sm mr-2">&larr; Back</a>
+    <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold">S</div>
+    <h1 class="text-lg font-semibold text-slate-800">New Ticket</h1>
+  </div>
+</header>
+
+<main class="max-w-2xl mx-auto px-4 py-8">
+  <form id="ticketForm" class="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Customer name</label>
+      <input required name="customer_name" type="text" placeholder="Jane Doe"
+        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Customer email</label>
+      <input required name="customer_email" type="email" placeholder="jane@example.com"
+        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Issue title</label>
+      <input required name="subject" type="text" placeholder="Cannot reset password"
+        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Description</label>
+      <textarea required name="description" rows="5" placeholder="Describe the issue in detail…"
+        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Priority</label>
+      <select name="priority" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="Low">Low</option>
+        <option value="Medium" selected>Medium</option>
+        <option value="High">High</option>
+      </select>
+    </div>
+
+    <div id="formError" class="hidden text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2"></div>
+
+    <button type="submit" id="submitBtn"
+      class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition">
+      Create Ticket
+    </button>
+  </form>
+</main>
+
+<script src="/static/js/api.js"></script>
+<script>
+document.getElementById("ticketForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById("submitBtn");
+  const errBox = document.getElementById("formError");
+  errBox.classList.add("hidden");
+  btn.disabled = true;
+  btn.textContent = "Creating…";
+
+  const form = new FormData(e.target);
+  const payload = Object.fromEntries(form.entries());
+
+  try {
+    const result = await apiPost("/tickets", payload);
+    window.location.href = `/ticket?id=${encodeURIComponent(result.ticket_id)}`;
+  } catch (err) {
+    errBox.textContent = err.message || "Something went wrong. Please try again.";
+    errBox.classList.remove("hidden");
+    btn.disabled = false;
+    btn.textContent = "Create Ticket";
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: support-crm
+    runtime: node
+    buildCommand: npm ci
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 24

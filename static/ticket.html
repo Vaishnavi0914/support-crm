@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ticket Detail · Support CRM</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}</style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<header class="bg-white border-b border-slate-200">
+  <div class="max-w-2xl mx-auto px-4 py-4 flex items-center gap-2">
+    <a href="/" class="text-slate-400 hover:text-slate-700 text-sm mr-2">&larr; Back</a>
+    <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold">S</div>
+    <h1 class="text-lg font-semibold text-slate-800">Ticket Detail</h1>
+  </div>
+</header>
+
+<main class="max-w-2xl mx-auto px-4 py-8">
+  <div id="loading" class="text-center text-slate-400 py-10">Loading…</div>
+  <div id="notFound" class="hidden text-center text-slate-400 py-10">Ticket not found.</div>
+
+  <div id="content" class="hidden space-y-6">
+    <!-- Header card -->
+    <div class="bg-white border border-slate-200 rounded-xl p-6">
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div class="font-mono text-xs text-slate-400 mb-1" id="ticketIdLabel"></div>
+          <h2 class="text-xl font-semibold text-slate-800" id="subjectLabel"></h2>
+        </div>
+        <div class="flex gap-2">
+          <span id="statusBadge" class="text-xs px-2 py-1 rounded-full h-fit"></span>
+          <span id="priorityBadge" class="text-xs px-2 py-1 rounded-full h-fit"></span>
+        </div>
+      </div>
+
+      <dl class="grid grid-cols-2 gap-4 mt-5 text-sm">
+        <div>
+          <dt class="text-slate-400 text-xs">Customer</dt>
+          <dd class="text-slate-800 font-medium" id="customerName"></dd>
+        </div>
+        <div>
+          <dt class="text-slate-400 text-xs">Email</dt>
+          <dd class="text-slate-800" id="customerEmail"></dd>
+        </div>
+        <div>
+          <dt class="text-slate-400 text-xs">Created</dt>
+          <dd class="text-slate-800" id="createdAt"></dd>
+        </div>
+        <div>
+          <dt class="text-slate-400 text-xs">Last updated</dt>
+          <dd class="text-slate-800" id="updatedAt"></dd>
+        </div>
+      </dl>
+
+      <div class="mt-5">
+        <dt class="text-slate-400 text-xs mb-1">Description</dt>
+        <dd class="text-slate-700 text-sm whitespace-pre-wrap" id="description"></dd>
+      </div>
+    </div>
+
+    <!-- Update status -->
+    <div class="bg-white border border-slate-200 rounded-xl p-6">
+      <h3 class="text-sm font-semibold text-slate-700 mb-3">Update Status</h3>
+      <div class="flex flex-wrap gap-2">
+        <button data-status="Open" class="status-btn text-sm px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50">Open</button>
+        <button data-status="In Progress" class="status-btn text-sm px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50">In Progress</button>
+        <button data-status="Closed" class="status-btn text-sm px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50">Closed</button>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="bg-white border border-slate-200 rounded-xl p-6">
+      <h3 class="text-sm font-semibold text-slate-700 mb-3">Notes</h3>
+      <div id="notesList" class="space-y-3 mb-4"></div>
+      <div class="flex gap-2">
+        <input id="newNote" type="text" placeholder="Add an internal note…"
+          class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <button id="addNoteBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition">Add</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="/static/js/api.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const ticketId = params.get("id");
+let currentTicket = null;
+
+async function load() {
+  if (!ticketId) {
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("notFound").classList.remove("hidden");
+    return;
+  }
+  try {
+    const t = await apiGet(`/tickets/${encodeURIComponent(ticketId)}`);
+    currentTicket = t;
+    render(t);
+  } catch (e) {
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("notFound").classList.remove("hidden");
+  }
+}
+
+function render(t) {
+  document.getElementById("loading").classList.add("hidden");
+  document.getElementById("content").classList.remove("hidden");
+
+  document.getElementById("ticketIdLabel").textContent = t.ticket_id;
+  document.getElementById("subjectLabel").textContent = t.subject;
+  document.getElementById("customerName").textContent = t.customer_name;
+  document.getElementById("customerEmail").textContent = t.customer_email;
+  document.getElementById("createdAt").textContent = fmtDate(t.created_at);
+  document.getElementById("updatedAt").textContent = fmtDate(t.updated_at);
+  document.getElementById("description").textContent = t.description;
+
+  const statusBadge = document.getElementById("statusBadge");
+  statusBadge.textContent = t.status;
+  statusBadge.className = `text-xs px-2 py-1 rounded-full h-fit ${statusBadgeClasses(t.status)}`;
+
+  const priorityBadge = document.getElementById("priorityBadge");
+  priorityBadge.textContent = t.priority;
+  priorityBadge.className = `text-xs px-2 py-1 rounded-full h-fit ${priorityBadgeClasses(t.priority)}`;
+
+  document.querySelectorAll(".status-btn").forEach(btn => {
+    const isActive = btn.dataset.status === t.status;
+    btn.classList.toggle("bg-indigo-600", isActive);
+    btn.classList.toggle("text-white", isActive);
+    btn.classList.toggle("border-indigo-600", isActive);
+  });
+
+  const notesList = document.getElementById("notesList");
+  if (t.notes.length === 0) {
+    notesList.innerHTML = `<div class="text-sm text-slate-400">No notes yet.</div>`;
+  } else {
+    notesList.innerHTML = t.notes.map(n => `
+      <div class="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+        <div class="text-slate-700 whitespace-pre-wrap">${escapeHtml(n.note_text)}</div>
+        <div class="text-xs text-slate-400 mt-1">${fmtDate(n.created_at)}</div>
+      </div>
+    `).join("");
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+document.querySelectorAll(".status-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    try {
+      await apiPut(`/tickets/${encodeURIComponent(ticketId)}`, { status: btn.dataset.status });
+      await load();
+    } catch (e) {
+      alert(e.message);
+    }
+  });
+});
+
+document.getElementById("addNoteBtn").addEventListener("click", async () => {
+  const input = document.getElementById("newNote");
+  const text = input.value.trim();
+  if (!text) return;
+  try {
+    await apiPut(`/tickets/${encodeURIComponent(ticketId)}`, { notes: text });
+    input.value = "";
+    await load();
+  } catch (e) {
+    alert(e.message);
+  }
+});
+
+load();
+</script>
+</body>
+</html>
