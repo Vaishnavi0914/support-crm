@@ -2,6 +2,8 @@
 
 A small full-stack CRM for managing customer support tickets.
 
+**Live demo:** [https://support-crm-rou1.onrender.com](https://support-crm-rou1.onrender.com)
+
 **Stack:** Node.js · Express · SQLite · Vanilla JavaScript · Tailwind CSS (CDN)
 
 ## Features
@@ -95,6 +97,8 @@ demo, swap `DATABASE_PATH` for a managed Postgres instance.
 
 Create a new Blueprint from the repository. Render reads `render.yaml`, runs
 `npm ci`, then starts the service with `npm start`.
+
+The deployed app is available at [https://support-crm-rou1.onrender.com](https://support-crm-rou1.onrender.com).
 
 ## What I'd improve with more time
 
